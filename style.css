@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+
+body {
+    font-family:'Courier New', Courier, monospace;
+    text-align: center;
+}
+
+#board {
+    background-color: black;
+}
+
+#outerBoard {
+    background-color: #633200;
+    width: fit-content;
+    height: fit-content;
+    padding: 20px;
+    padding-top: 1px;
+    margin: auto;
+    max-width: 560px;
+}
+
+#scorePara {
+    margin-right: 550px;
+    font-size: 16px;
+    font-family: Courier;
+    color: rgb(211, 206, 206);
+    margin-bottom: -3px;
+    margin-left: -2px;
+    margin-top: -3px;
+}
+
+#wavePara {
+    margin-right: 470px;
+    font-size: 16px;
+    font-family: Courier;
+    color: rgb(211, 206, 206);
+    margin-bottom: -5px;
+    margin-left: -20px;
+    margin-top: 2px;
+} 
+
+#hearts{
+    width: 24px;
+    height: 24px;
+    margin-right: 3px;
+    margin-left: 3px;
+}
+
+#healthBar{
+    margin-left: 450px;
+    margin-bottom: -1px;
+    /* margin-left: -2px; */
+    margin-top: -35px;
+}
+
+#gameOverDiv{
+    opacity: 0.5;
+    background: red;
+    color: rgb(244, 247, 106);
+    font-family: 'Pixelify Sans';
+    font-weight: 700;
+    font-style: normal;
+    text-align: center;
+    width: 512px;
+    height: 512px;
+    font-size: 80px;
+    margin: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2px;
+    padding-bottom: 10px;
+    place-content: center;
+}
