@@ -1,24 +1,20 @@
 //board
 let tileSize = 24
-let rows = 20
-let columns = 20
+let rows = (window.innerHeight - 17) / 24
+let columns = (window.innerWidth - 17) / 24
 
 let board
-let scorePara
 let context
-let healthBar
-let wavePara
 let waveNum
 
 //ship
-let shipWidth = tileSize * 2
-let shipHeight = tileSize
+let shipWidth = tileSize * 3
+let shipHeight = tileSize * 2.5
 let shipX = tileSize * columns / 2 - tileSize
 let shipY = tileSize * rows - tileSize * 2
 let shipHearts
 let heartImg
 let deadHeartImg
-let outerDiv
 
 let ship = {
     x: shipX,
@@ -28,41 +24,36 @@ let ship = {
 }
 
 let shipImg
-let shipVelocityX = tileSize //ship moving speed
+let shipVelocityX = tileSize
 
-//aliens
 let alienArray = []
-let alienWidth = tileSize * 2
-let alienHeight = tileSize
+let alienWidth = tileSize * 2.5
+let alienHeight = tileSize * 2
 let alienX = tileSize
 let alienY = tileSize
-let alienImg
 
-let alienRows = 1
-let alienColumns = 3
-let alienCount = 0 //number of aliens to defeat
-let alienVelocityX = 1 //alien moving speed
+let alienRows = 3
+let alienColumns = 7
+let alienVelocityX = 1.2
 
-let kingAlienArray = []
-let kingAlienWidth = tileSize * 2
-let kingAlienHeight = tileSize * 1.5
-let kingAlienX = tileSize
-let kingAlienY = tileSize
-let kingAlienImg
-
-let kingAlienRows = 1
-let kingAlienColumns = 3
-let kingAlienCount = 0 //number of aliens to defeat
-let kingAlienVelocityX = 1.2 //alien moving speed
-
-
-//bullets
 let bulletArray = []
-let bulletVelocityY = -10 //bullet moving speed
+let bulletVelocityY = -10
 
-//king alien bullets
 let alienBulletArray = []
-let alienBulletVelocityY = 10 //bullet moving speed
+let alienBulletVelocityY = 10
+
+let megaAlienArray = []
+let megaAlienWidth = tileSize * 2
+let megaAlienHeight = tileSize * 3
+let megaAlienX = tileSize
+let megaAlienY = tileSize
+
+let megaAlienRows = 1
+let megaAlienColumns = 3
+let megaAlienVelocityX = 1.5
+
+let megaAlienBulletArray = []
+let megaAlienBulletVelocityY = 15
 
 let score = 0
 let gameOver = false
@@ -70,15 +61,11 @@ let gameOver = false
 window.onload = function () {
     waveNum = 1
     shipHearts = 3
-    scorePara = document.getElementById("scorePara")
-    healthBar = document.getElementById("healthBar")
-    wavePara = document.getElementById("wavePara")
-    outerDiv = document.getElementById("outerDiv")
 
     board = document.getElementById("board")
-    board.width = tileSize * columns
-    board.height = tileSize * rows
-    context = board.getContext("2d") //used for drawing on the board
+    board.width = window.innerWidth - 17
+    board.height = window.innerHeight - 10
+    context = board.getContext("2d")
 
     heartImg = new Image()
     heartImg.src = "Images/heart.png"
@@ -91,56 +78,64 @@ window.onload = function () {
     shipImg.onload = function () {
         context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height)
     }
-    createAliens()
-    createKingAliens()
-    requestAnimationFrame(update)
-    document.addEventListener("keydown", moveShip)
-    document.addEventListener("keyup", shoot)
-}
 
-function reload() {
-    location.reload()
+    createAliens()
+    createMegaAliens()
+    requestAnimationFrame(update)
+    document.addEventListener("keydown", keyPressed)
 }
 
 function update() {
-    let hearts = ''
     requestAnimationFrame(update)
 
     if (gameOver) {
-        hearts = `
-        <img src="Images/deadHeart.png" id="hearts"/>
-        <img src="Images/deadHeart.png" id="hearts"/>
-        <img src="Images/deadHeart.png" id="hearts"/>
-        `
-        healthBar.innerHTML = hearts
-        outerDiv.innerHTML = `
-        <div id="gameOverDiv"> Game Over</div>`
+        board.width = window.innerWidth - 17
+        board.height = window.innerHeight - 10
+        rows = (window.innerHeight - 17) / 24
+        ship.y = tileSize * rows - tileSize * 2 - 20
+        context.clearRect(0, 0, board.width, board.height)
+        for (let i = 0; i < (3 - shipHearts); i++) {
+            context.drawImage(deadHeartImg, 1750 + (i * 50), 10, 40, 40)
+        }
+        context.fillStyle = "white";
+        context.font = "26px courier";
+        context.fillText(`Wave ${waveNum}`, 1, ship.y + 70);
+
+        context.fillStyle = "white";
+        context.font = "26px courier";
+        context.fillText(score, -3, 30);
+
+        context.fillStyle = "red";
+        context.font = `${board.width / 18}px bold courier`;
+        context.fillText("GAME OVER", (board.width / 2) - (board.width / 6), board.height / 2);
         return
     }
-
+    board.width = window.innerWidth - 17
+    board.height = window.innerHeight - 10
+    rows = (window.innerHeight - 17) / 24
+    ship.y = tileSize * rows - tileSize * 2 - 20
     context.clearRect(0, 0, board.width, board.height)
     context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height)
 
     //hearts
+    for (let i = 0; i < shipHearts; i++) {
+        context.drawImage(heartImg, 1850 - (i * 50), 10, 40, 40)
+    }
+
     for (let i = 0; i < (3 - shipHearts); i++) {
-        hearts += `<img src="Images/deadHeart.png" id="hearts"/>`
+        context.drawImage(deadHeartImg, 1750 + (i * 50), 10, 40, 40)
     }
 
-    for (let i = 1; i <= shipHearts; i++) {
-        hearts += `<img src="Images/heart.png" id="hearts"/>`
-    }
-    console.log(hearts)
-    healthBar.innerHTML = hearts
-
-    wavePara.innerText = `Wave ${waveNum}`
+    //wave
+    context.fillStyle = "white";
+    context.font = "26px courier";
+    context.fillText(`Wave ${waveNum}`, 1, ship.y + 70);
 
     //alien
     for (let i = 0; i < alienArray.length; i++) {
-        let alienImage = alienImgGenerator()
         let alien = alienArray[i]
         if (alien.alive) {
             alien.x += alienVelocityX
-
             //if alien touches the borders
             if (alien.x + alien.width >= board.width || alien.x <= 0) {
                 alienVelocityX *= -1
@@ -151,7 +146,7 @@ function update() {
                     alienArray[j].y += alienHeight
                 }
             }
-            context.drawImage(alienImage, alien.x, alien.y, alien.width, alien.height)
+            context.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height)
 
             if (alien.y >= ship.y) {
                 gameOver = true
@@ -159,55 +154,57 @@ function update() {
         }
     }
 
-    //king alien
-    for (let i = 0; i < kingAlienArray.length; i++) {
-        let kingAlienImage = kingAlienImgGenerator()
-        let kingAlien = kingAlienArray[i]
-        if (kingAlien.alive) {
-            kingAlien.x += kingAlienVelocityX
-            //if alien touches the borders
-            if (kingAlien.x + kingAlien.width >= board.width || kingAlien.x <= 0) {
-                kingAlienVelocityX *= -1
-                kingAlien.x += kingAlienVelocityX * 2
+    //mega alien
+    // for (let i = 0; i < megaAlienArray.length; i++) {
+    //     let megaAlien = megaAlienArray[i]
+    //     if (megaAlien.alive) {
+    //         megaAlien.x += megaAlienVelocityX
+    //         //if alien touches the borders
+    //         if (megaAlien.x + megaAlien.width >= board.width || megaAlien.x <= 0) {
+    //             megaAlienVelocityX *= -1
+    //             megaAlien.x += megaAlienVelocityX * 2
 
-                //move all aliens up by one row
-                for (let j = 0; j < kingAlienArray.length; j++) {
-                    kingAlienArray[j].y += kingAlienHeight
-                }
-            }
-            context.drawImage(kingAlienImage, kingAlien.x, kingAlien.y, kingAlien.width, kingAlien.height)
+    //             //move all aliens up by one row
+    //             for (let j = 0; j < megaAlienArray.length; j++) {
+    //                 megaAlienArray[j].y += megaAlienHeight
+    //             }
+    //         }
+    //         context.drawImage(megaAlien.img, megaAlien.x, megaAlien.y, megaAlien.width, megaAlien.height)
 
-            if (kingAlien.y >= ship.y) {
-                gameOver = true
-            }
-        }
-    }
+    //         if (megaAlien.y >= ship.y) {
+    //             gameOver = true
+    //         }
+    //     }
+    // }
 
     //bullets
     for (let i = 0; i < bulletArray.length; i++) {
         let bullet = bulletArray[i]
         bullet.y += bulletVelocityY
         context.fillStyle = "white"
-        context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
+        if (!bullet.used) {
+            context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height)
+        }
 
         //bullet collision with aliens
         for (let j = 0; j < alienArray.length; j++) {
             let alien = alienArray[j]
             if (!bullet.used && alien.alive && detectCollision(bullet, alien)) {
+                bulletArray.splice(j, 1)
                 bullet.used = true
                 alien.alive = false
-                alienCount--
+                alienArray.splice(j, 1)
                 score += 100
             }
         }
 
-        for (let j = 0; j < kingAlienArray.length; j++) {
-            let kingAlien = kingAlienArray[j]
-            if (!bullet.used && kingAlien.alive && detectCollision(bullet, kingAlien)) {
+        //bullet collision with alien bullet
+        for (let j = 0; j < alienBulletArray.length; j++) {
+            let alienBullet = alienBulletArray[j]
+            if (!bullet.used && !alienBullet.used && detectCollision(bullet, alienBullet)) {
+                bulletArray.splice(j, 1)
                 bullet.used = true
-                kingAlien.alive = false
-                kingAlienCount--
-                score += 100
+                alienBullet.used = true
             }
         }
     }
@@ -217,10 +214,10 @@ function update() {
         let alienBullet = alienBulletArray[i]
         alienBullet.y += alienBulletVelocityY
         context.fillStyle = "blue"
-        context.fillRect(alienBullet.x, alienBullet.y, alienBullet.width, alienBullet.height)
-
+        if (!alienBullet.used) {
+            context.fillRect(alienBullet.x, alienBullet.y, alienBullet.width, alienBullet.height)
+        }
         if (!alienBullet.used && detectCollision(alienBullet, ship)) {
-            console.log('collision')
             alienBullet.used = true
             shipHearts--
         }
@@ -229,7 +226,6 @@ function update() {
             gameOver = true
         }
     }
-
 
     //clear bullets
     while (bulletArray.length > 0 && (bulletArray[0].used || bulletArray[0].y < 0)) {
@@ -240,12 +236,11 @@ function update() {
         alienBulletArray.shift() //removes the first element of the array
     }
 
-    //next level
-    if (alienCount == 0) {
-        //increase the number of aliens in columns and rows by 1
+    if (alienArray.length == 0) {
+        //increase the number of aliens in columns and rows by 1\
         waveNum++
         score += alienColumns * alienRows * 100 //bonus points :)
-        alienColumns = Math.min(alienColumns + 1, columns / 2 - 2) //cap at 16/2 -2 = 6
+        alienColumns = Math.min(alienColumns + 0.5, columns / 2 - 2) //cap at 16/2 -2 = 6
         alienRows = Math.min(alienRows + 1, rows - 4)  //cap at 16-4 = 12
         if (alienVelocityX > 0) {
             alienVelocityX += 0.2 //increase the alien movement speed towards the right
@@ -258,47 +253,25 @@ function update() {
         createAliens()
     }
 
-    if (kingAlienCount == 0) {
-        //increase the number of aliens in columns and rows by 1\
-        waveNum++
-        score += kingAlienColumns * kingAlienRows * 100 //bonus points :)
-        kingAlienColumns = Math.min(kingAlienColumns + 0.5, columns / 2 - 2) //cap at 16/2 -2 = 6
-        kingAlienRows = Math.min(kingAlienRows + 1, rows - 4)  //cap at 16-4 = 12
-        if (kingAlienVelocityX > 0) {
-            kingAlienVelocityX += 0.2 //increase the alien movement speed towards the right
-        }
-        else {
-            kingAlienVelocityX -= 0.2 //increase the alien movement speed towards the left
-        }
-        kingAlienArray = []
-        bulletArray = []
-        createKingAliens()
-    }
-
     //score
-    scorePara.innerHTML = `<p>${score}</p>`
-}
+    context.fillStyle = "white";
+    context.font = "26px courier";
+    context.fillText(score, -3, 30);
 
-function moveShip(e) {
-    if (gameOver) {
-        return
-    }
-
-    if (e.code == "ArrowLeft" && ship.x - shipVelocityX >= 0) {
-        ship.x -= shipVelocityX //move left one tile
-    }
-    else if (e.code == "ArrowRight" && ship.x + shipVelocityX + ship.width <= board.width) {
-        ship.x += shipVelocityX //move right one tile
-    }
 }
 
 function createAliens() {
+    let colors = ["grey", "blue", "red"]
     for (let c = 0; c < alienColumns; c++) {
         for (let r = 0; r < alienRows; r++) {
+            let alienImg = new Image
+            let color = colors[Math.floor((Math.random() * colors.length))]
+            alienImg.src = `./Images/${color}-alien1.png`
             let alien = {
+                color: color,
                 img: alienImg,
-                x: alienX + c * alienWidth,
-                y: alienY + r * alienHeight,
+                x: alienX + 1.2 * c * alienWidth,
+                y: alienY + 1.2 * r * alienHeight,
                 width: alienWidth,
                 height: alienHeight,
                 alive: true
@@ -306,378 +279,128 @@ function createAliens() {
             alienArray.push(alien)
         }
     }
-    alienCount = alienArray.length
 }
 
-function createKingAliens() {
-    for (let c = 0; c < kingAlienColumns; c++) {
-        for (let r = 0; r < kingAlienRows; r++) {
-            let kingAlien = {
-                img: kingAlienImg,
-                x: kingAlienX + c * kingAlienWidth,
-                y: kingAlienY + r * kingAlienHeight,
-                width: kingAlienWidth,
-                height: kingAlienHeight,
+function createMegaAliens() {
+    for (let c = 0; c < megaAlienColumns; c++) {
+        for (let r = 0; r < megaAlienRows; r++) {
+            let megaAlienImg = new Image
+            megaAlienImg.src = `./Images/aliens.png`
+            let megaAlien = {
+                img: megaAlienImg,
+                x: megaAlienX + 1.2 * c * megaAlienWidth,
+                y: megaAlienY + 1.2 * r * megaAlienHeight,
+                width: megaAlienWidth,
+                height: megaAlienHeight,
                 alive: true
             }
-            kingAlienArray.push(kingAlien)
+            megaAlienArray.push(megaAlien)
         }
     }
-    kingAlienCount = kingAlienArray.length
 }
 
-function kingAlienImgGenerator() {
-    kingAlienImg = new Image()
-    kingAlienImg.src = "Images/king-alien.png"
-    return kingAlienImg
-}
-
-function alienImgGenerator() {
-    let colors = ['cyan', 'white', 'magenta', 'yellow']
-
-    alienImg = new Image()
-    alienImg.src = `Images/alien-${colors[Math.floor((Math.random() * colors.length))]}.png`
-    return alienImg
-}
-
-async function shoot(e) {
+async function keyPressed(key) {
     if (gameOver) {
-        if (e.code == "Space") {
-            reload()
+        if (key.code == "Space") {
+            location.reload()
         }
         else {
             return
         }
     }
 
-    if (e.code == "Space") {
+    else if (key.code == "Space") {
         const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
-
         let bullet = {
             x: ship.x + shipWidth * 15 / 32,
             y: ship.y,
-            width: tileSize / 8,
-            height: tileSize / 2,
+            width: 8,
+            height: 20,
             used: false
+        };
+        // for (let i = 1; i <= 1; i++) {
+        //     for (let j = 1; j <= 1; j++) {
+        //         let bullet = {
+        //             x: ship.x + shipWidth * 15 / 32,
+        //             y: ship.y,
+        //             width: 8,
+        //             height: 20,
+        //             used: false
+        //         };
+        //         for (let k = 1; k <= 1; k++) {
+        //             bulletArray.push(bullet);
+        //         }
+        //     }
+        //     await sleep(500);
+        // }
+
+        if (bulletArray.length === 0) {
+            bulletArray.push(bullet)
         }
 
-        bulletArray.push(bullet)
+        else if (bulletArray[0].y > (board.height / 2)) {
+            return;
+        }
 
-    // Crazy Shooting mode
-        // let bullet2 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
+        else if (bulletArray[0].y < (board.height / 2)) {
+            bulletArray[1] = bulletArray[0]
+            bulletArray[0] = bullet
+        }
+    }
 
-        // let bullet3 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
+    else if (key.code == "ArrowLeft" && ship.x - shipVelocityX >= 0) {
+        ship.x -= shipVelocityX //move left one tile
+    }
 
-        // let bullet4 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet5 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet6 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet7 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet8 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet9 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet10 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet11 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet12 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet13 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet14 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet15 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet16 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet17 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet18 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet19 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet20 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet21 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet22 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet23 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet24 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet25 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet26 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet27 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet28 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet29 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-
-        // let bullet30 = {
-        //     x: ship.x + shipWidth * 15 / 32,
-        //     y: ship.y,
-        //     width: tileSize / 8,
-        //     height: tileSize / 2,
-        //     used: false
-        // }
-        // await sleep(500)
-        // bulletArray.push(bullet2)
-        // await sleep(500)
-        // bulletArray.push(bullet3)
-        // await sleep(500)
-        // bulletArray.push(bullet4)
-        // await sleep(500)
-        // bulletArray.push(bullet5)
-        // await sleep(500)
-        // bulletArray.push(bullet6)
-        // await sleep(500)
-        // bulletArray.push(bullet7)
-        // await sleep(500)
-        // bulletArray.push(bullet8)
-        // await sleep(500)
-        // bulletArray.push(bullet9)
-        // await sleep(500)
-        // bulletArray.push(bullet10)
-        // await sleep(500)
-        // bulletArray.push(bullet11)
-        // await sleep(500)
-        // bulletArray.push(bullet12)
-        // await sleep(500)
-        // bulletArray.push(bullet13)
-        // await sleep(500)
-        // bulletArray.push(bullet14)
-        // await sleep(500)
-        // bulletArray.push(bullet15)
-        // await sleep(500)
-        // bulletArray.push(bullet16)
-        // await sleep(500)
-        // bulletArray.push(bullet17)
-        // await sleep(500)
-        // bulletArray.push(bullet18)
-        // await sleep(500)
-        // bulletArray.push(bullet19)
-        // await sleep(500)
-        // bulletArray.push(bullet20)
-        // await sleep(500)
-        // bulletArray.push(bullet21)
-        // await sleep(500)
-        // bulletArray.push(bullet22)
-        // await sleep(500)
-        // bulletArray.push(bullet23)
-        // await sleep(500)
-        // bulletArray.push(bullet24)
-        // await sleep(500)
-        // bulletArray.push(bullet25)
-        // await sleep(500)
-        // bulletArray.push(bullet26)
-        // await sleep(500)
-        // bulletArray.push(bullet27)
-        // await sleep(500)
-        // bulletArray.push(bullet28)
-        // await sleep(500)
-        // bulletArray.push(bullet29)
-        // await sleep(500)
-        // bulletArray.push(bullet30)
+    else if (key.code == "ArrowRight" && ship.x + shipVelocityX + ship.width <= board.width) {
+        ship.x += shipVelocityX //move right one tile
     }
 }
 
 function alienShoot() {
-    for (let i = 0; i < kingAlienArray.length; i++) {
-        let kingAlien = kingAlienArray[i]
-        if (kingAlien.alive) {
-            let alienBullet = {
-                x: kingAlien.x + kingAlienWidth * 15 / 32,
-                y: kingAlien.y,
-                width: tileSize / 8,
-                height: tileSize / 2,
-                used: false
-            }
-            alienBulletArray.push(alienBullet)
+    for (let i = 0; i < alienArray.length / 3; i++) {
+        let alien = alienArray[Math.floor((Math.random() * alienArray.length))]
+        let alienBullet = {
+            x: alien.x + alienWidth * 15 / 32,
+            y: alien.y,
+            width: 8,
+            height: 20,
+            used: false
         }
+        alienBulletArray.push(alienBullet)
     }
-
 }
 
-setInterval(alienShoot, 5000)
+function megaAlienShoot() {
+    for (let i = 0; i < alienArray.length / 3; i++) {
+        let alien = alienArray[Math.floor((Math.random() * alienArray.length))]
+        let alienBullet = {
+            x: alien.x + alienWidth * 15 / 32,
+            y: alien.y,
+            width: 8,
+            height: 20,
+            used: false
+        }
+        alienBulletArray.push(alienBullet)
+    }
+}
+
+function imageChanger() {
+    for (let i = 0; i < alienArray.length; i++) {
+        let colors = ["grey", "blue", "red"]
+        let alien = alienArray[i]
+        let numbers = ["1", "2"]
+        let color = colors[Math.floor((Math.random() * colors.length))]
+        alien.img.src = `./Images/${color}-alien${numbers[Math.floor((Math.random() * numbers.length))]}.png`
+    }
+}
+
+setInterval(imageChanger, 300)
+setInterval(alienShoot, 3000)
 
 function detectCollision(a, b) {
     return a.x < b.x + b.width &&   //a's top left corner doesn't reach b's top right corner
         a.x + a.width > b.x &&   //a's top right corner passes b's top left corner
         a.y < b.y + b.height &&  //a's top left corner doesn't reach b's bottom left corner
         a.y + a.height > b.y    //a's bottom left corner passes b's top left corner
-}
+}  
